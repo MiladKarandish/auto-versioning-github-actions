@@ -21,6 +21,8 @@ jobs:
 
       - name: Commit Changes
         run: |
+          git config --local user.email miladkaarandish@gmail.com
+          git config --local user.name miladkarandish
           git add .
           git commit -m "Auto increment version [skip ci]"
 

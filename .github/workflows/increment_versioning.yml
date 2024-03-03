@@ -1,0 +1,30 @@
+name: Auto Versioning
+
+on:
+  push:
+    branches:
+      - master # Adjust this to your main branch name
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Increment Version
+        id: increment_version
+        run: |
+          new_version=$(bash increment_version.sh)
+          echo "::set-output name=new_version::$new_version"
+
+      - name: Commit Changes
+        run: |
+          git add .
+          git commit -m "Auto increment version [skip ci]"
+
+      - name: Push Changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

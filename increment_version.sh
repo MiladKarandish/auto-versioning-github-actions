@@ -1,26 +1,33 @@
 #!/bin/bash
 
-# Get the latest version from the repository
-latest_version=$(git describe --abbrev=0 --tags)
-
-# Extract the major, minor, and patch versions
-IFS='.' read -r -a version_parts <<< "$latest_version"
-major="${version_parts[0]}"
-minor="${version_parts[1]}"
-patch="${version_parts[2]}"
-
-# Determine the commit message and increment version accordingly
-commit_message=$(git log --format=%B -n 1 HEAD)
-if [[ $commit_message == *"fix"* ]]; then
-  patch=$((patch + 1))
-elif [[ $commit_message == *"feature"* ]]; then
-  minor=$((minor + 1))
-else
-  echo "No keyword found, not incrementing version."
-  exit 0
+# Get the latest tag if available
+latest_tag=$(git describe --tags --abbrev=0 2>/dev/null)
+if [ -z "$latest_tag" ]; then
+    latest_tag="0.0.0"
 fi
 
-# Construct the new version string
+# Parse the version
+major=$(echo $latest_tag | cut -d. -f1)
+minor=$(echo $latest_tag | cut -d. -f2)
+patch=$(echo $latest_tag | cut -d. -f3)
+
+# Parse commit messages and determine the type of change
+while read -r line; do
+    case $line in
+        *major*) ((major++)); minor=0; patch=0 ;;
+        *minor*) ((minor++)); patch=0 ;;
+        *patch*) ((patch++)) ;;
+    esac
+done < <(git log --pretty=%s origin/master..HEAD)
+
+# If no specific version bump is indicated, default to patch
+if [[ $major == $latest_tag && $minor == $latest_tag && $patch == $latest_tag ]]; then
+    ((patch++))
+fi
+
+# Update the version number
 new_version="$major.$minor.$patch"
 
-echo $new_version
+# Create a new tag on GitHub
+git tag -a "$new_version" -m "Version $new_version"
+git push origin "$new_version"

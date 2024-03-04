@@ -2,7 +2,7 @@ Auto versioning - Github actions
 
 Script & yml
 
-fix and feature
+fix and feature ...
 
 # To delete all tags
 
